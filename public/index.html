@@ -45,13 +45,23 @@ function initMap() {
 }
 
 // Listen for location changes
-const userId = 'userIdOfInterest'; // Replace with the user's ID
-db.collection("users").doc(userId).onSnapshot(function(doc) {
-    var location = doc.data().location;
-    var newPos = new google.maps.LatLng(location.latitude, location.longitude);
-    marker.setPosition(newPos);
-    map.setCenter(newPos);
-});
+function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
+}
+
+// Use getQueryParam to extract the userId
+const userId = getQueryParam('userId'); 
+if (userId) {
+    db.collection("users").doc(userId).onSnapshot(function(doc) {
+        var location = doc.data().location;
+        var newPos = new google.maps.LatLng(location.latitude, location.longitude);
+        marker.setPosition(newPos);
+        map.setCenter(newPos);
+    });
+} else {
+    console.log("User ID not provided in URL");
+}
 
 // Initialize the map
 initMap();
