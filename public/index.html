@@ -34,15 +34,40 @@ var map;
 var marker;
 
 function initMap() {
+    // Initialize with a default location
+    var initialLocation = { lat: -34.397, lng: 150.644 };
+
     map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: -34.397, lng: 150.644 },
+        center: initialLocation,
         zoom: 8
     });
+
     marker = new google.maps.Marker({
-        position: { lat: -34.397, lng: 150.644 },
+        position: initialLocation,
         map: map
     });
+
+    // Listen for location updates
+    listenToLocationUpdates();
 }
+
+function listenToLocationUpdates() {
+    const userId = getQueryParam('userId');
+    if (userId) {
+        db.collection("users").doc(userId).onSnapshot(function(doc) {
+            var location = doc.data().location;
+            if (location) {
+                var newPos = new google.maps.LatLng(location.latitude, location.longitude);
+                marker.setPosition(newPos);
+                map.setCenter(newPos);
+            }
+        });
+    } else {
+        console.log("User ID not provided in URL");
+    }
+}
+
+
 
 // Listen for location changes
 function getQueryParam(param) {
@@ -69,7 +94,7 @@ initMap();
     <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-firestore.js"></script>
     
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDW4M6LkqAXwFkpyUMBv9RVASdwZCMy5P4&c&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDW4M6LkqAXwFkpyUMBv9RVASdwZCMy5P4&callback=initMap" async defer></script>
     <!-- <script src="script.js"></script> -->
 </body>
 </html>
