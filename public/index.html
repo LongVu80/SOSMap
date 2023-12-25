@@ -198,7 +198,7 @@
                             pathCoordinates.push(newPos);
 
                             if (previousPos && google.maps.geometry.spherical.computeDistanceBetween(newPos, previousPos) > someThresholdDistance) {
-                                marker.setIcon("https://www.facebook.com/thienlong2011/videos/353525710632996"); // User is moving
+                                marker.setIcon("public/LongMoving.gif"); // User is moving
                             } else {
                                 marker.setIcon("public/idle.gif"); // User is idle
                             }
