@@ -4,97 +4,324 @@
     <title>Real-Time Location Tracker</title>
     <style>
         body, html {
-            height: 100%;
             margin: 0;
             padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
         }
 
-        #map {
+        .container {
+            display: flex;
+            flex-direction: column;
             height: 100%;
         }
+
+        /* .sidebar {
+            width: 250px;
+            background-color: #f4f4f4;
+            padding: 20px;
+        } */
+
+        .user-info {
+            display: flex;
+            flex-direction: row;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .userHead, .userBottom {
+            align-items: center;
+        }
+
+        .map {
+            flex-grow: 1;
+            height: 100%;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .user-info h2 {
+            text-align: center;
+        }
+
+        .user-details {
+            padding: 20px;
+            border-top: 1px solid #ccc;
+        }
+
+        ul {
+            list-style-type: none;
+            }
+
+        @media (max-width: 600px) {
+        .container {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+            /* order: 1; */
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .userHead, .userBottom {
+            align-items: center;
+        }
+
+        .map {
+            order: 2;
+            height: 60%; /* Adjust as needed */
+        }
+
+        .avatar {
+            width: 80px; /* Smaller avatar for smaller screens */
+            height: 80px;
+        }
+    }
     </style>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+
 </head>
 <body>
-    <div id="map"></div>
-    <script type="text/javascript">
-const firebaseConfig = {
-    apiKey: "AIzaSyDOIw-fFTJw9vmXY0dYpMv1n-wVJ4q_Lag",
-    authDomain: "e-alert-pro.firebaseapp.com",
-    projectId: "e-alert-pro",
-    storageBucket: "e-alert-pro.appspot.com",
-    messagingSenderId: "1023817610592",
-    appId: "1:1023817610592:web:356fd0cf61dce22be6da05",
-    measurementId: "G-BBRQ4TY5SD"
-};
-firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
-
-// Initialize Google Map
-var map;
-var marker;
-
-function initMap() {
-    // Initialize with a default location
-    var initialLocation = { lat: -34.397, lng: 150.644 };
-
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: initialLocation,
-        zoom: 8
-    });
-
-    marker = new google.maps.Marker({
-        position: initialLocation,
-        map: map
-    });
-
-    // Listen for location updates
-    listenToLocationUpdates();
-}
-
-function listenToLocationUpdates() {
-    const userId = getQueryParam('userId');
-    if (userId) {
-        db.collection("users").doc(userId).onSnapshot(function(doc) {
-            var location = doc.data().location;
-            if (location) {
-                var newPos = new google.maps.LatLng(location.latitude, location.longitude);
-                marker.setPosition(newPos);
-                map.setCenter(newPos);
-            }
-        });
-    } else {
-        console.log("User ID not provided in URL");
-    }
-}
-
-
-
-// Listen for location changes
-function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-}
-
-// Use getQueryParam to extract the userId
-const userId = getQueryParam('userId'); 
-if (userId) {
-    db.collection("users").doc(userId).onSnapshot(function(doc) {
-        var location = doc.data().location;
-        var newPos = new google.maps.LatLng(location.latitude, location.longitude);
-        marker.setPosition(newPos);
-        map.setCenter(newPos);
-    });
-} else {
-    console.log("User ID not provided in URL");
-}
-
-// Initialize the map
-initMap();
-    </script>
+    <div class="container">
+        <div class="sidebar">
+            <div class="user-info">
+                <div class="userHead">
+                    <img id="userImage" src="default-avatar.png" alt="User Image" class="avatar">
+                    <h2 id="userName">User's Name</h2>
+                </div>
+                <div class="userBottom">
+                    <ul>
+                        <li>Age: </li>
+                        <li>Gender: </li>
+                        <li>Race: </li>
+                        <li>Height: </li>
+                        <li>Weight: </li>
+                        <li>Home Address: </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="map" class="map"></div>
+    </div>
     <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-firestore.js"></script>
-    
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDW4M6LkqAXwFkpyUMBv9RVASdwZCMy5P4&callback=initMap" async defer></script>
-    <!-- <script src="script.js"></script> -->
+    <script>
+
+        
+        // Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyDOIw-fFTJw9vmXY0dYpMv1n-wVJ4q_Lag",
+            authDomain: "e-alert-pro.firebaseapp.com",
+            projectId: "e-alert-pro",
+            storageBucket: "e-alert-pro.appspot.com",
+            messagingSenderId: "1023817610592",
+            appId: "1:1023817610592:web:356fd0cf61dce22be6da05",
+            measurementId: "G-BBRQ4TY5SD"
+        };
+
+
+
+        window.onload = function() {
+            initMap();  // Initialize the map
+            listenToLocationUpdates();  // Start listening for location updates
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+
+        // Initialize Google Map
+        var map;
+        var marker;
+        var previousPos = null; // Store the previous position
+        var someThresholdDistance = 0.5;
+
+        function initMap() {
+            var initialLocation = { lat: -34.397, lng: 150.644 };
+            var image = {
+                url: "public/idle.gif", // url
+                scaledSize: new google.maps.Size(40,40), // scaled size
+                origin: new google.maps.Point(0,0), // origin
+                anchor: new google.maps.Point(0, 30) // anchor
+            };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: initialLocation,
+                zoom: 17,
+            });
+
+            marker = new google.maps.Marker({
+                position: initialLocation,
+                map: map,
+                icon: image,
+                optimized: false
+            });
+
+            listenToLocationUpdates();
+        }
+
+
+        function listenToLocationUpdates() {
+            const userId = getQueryParam('userId');
+            var pathCoordinates = []; // Array to hold coordinates
+            var sosPath; // Polyline object
+
+            if (userId) {
+                fetchAndDisplayUserData(userId);
+                db.collection("users").doc(userId).onSnapshot(function(doc) {
+                    if (doc.exists) {
+                        var userData = doc.data();
+                        if (userData.sos_alert && userData.sos_alert.active && userData.location) {
+                            var location = userData.location;
+                            var newPos = new google.maps.LatLng(location.latitude, location.longitude);
+                            // var speed = location.speed || 0;
+                            // var heading = location.heading || 0;
+
+                            // updateMarkerBasedOnActivity(speed, heading);  // Call this function to update marker icon
+
+                            // Update the marker position
+                            marker.setPosition(newPos);
+
+                            // Add new position to pathCoordinates array
+                            pathCoordinates.push(newPos);
+
+                            if (previousPos && google.maps.geometry.spherical.computeDistanceBetween(newPos, previousPos) > someThresholdDistance) {
+                                marker.setIcon("https://www.facebook.com/thienlong2011/videos/353525710632996"); // User is moving
+                            } else {
+                                marker.setIcon("public/idle.gif"); // User is idle
+                            }
+
+                            // Draw or update the polyline
+                            if (sosPath) {
+                                sosPath.setPath(pathCoordinates);
+                            } else {
+                                sosPath = new google.maps.Polyline({
+                                    path: pathCoordinates,
+                                    geodesic: true,
+                                    strokeColor: '#0078FF',
+                                    strokeOpacity: 1.0,
+                                    strokeWeight: 2,
+                                });
+                                sosPath.setMap(map);
+                            }
+
+                            // Center the map to the new position
+                            map.setCenter(newPos);
+                        } else if(!userData.sos_alert.active){
+                            // SOS session is not active, clear the map
+                            if (marker) {
+                                marker.setMap(null);
+                            }
+                            if (sosPath) {
+                                sosPath.setMap(null);
+                            }
+                            pathCoordinates = []; // Clear the path coordinates
+                        }
+                    }
+                });
+            } else {
+                console.log("User ID not provided in URL");
+            }
+        }
+            
+        window.initMap = initMap;
+
+
+
+    //     function listenToLocationUpdates1() {
+    //     const userId = getQueryParam('userId');
+    //     var pathCoordinates = []; // Array to hold coordinates
+    //     var sosPath; // Polyline object
+
+    //     if (userId) {
+    //         fetchAndDisplayUserData(userId); // Fetch and display user data
+
+    //         db.collection("users").doc(userId).onSnapshot(function(doc) {
+    //             if (doc.exists && doc.data().location) {
+    //                 var location = doc.data().location;
+    //                 var newPos = new google.maps.LatLng(location.latitude, location.longitude);
+
+    //                 // Update the marker position
+    //                 marker.setPosition(newPos);
+
+    //                 // Add new position to pathCoordinates array
+    //                 pathCoordinates.push(newPos);
+
+    //                 // Draw or update the polyline
+    //                 if (sosPath) {
+    //                     sosPath.setPath(pathCoordinates);
+    //                 } else {
+    //                     sosPath = new google.maps.Polyline({
+    //                         path: pathCoordinates,
+    //                         geodesic: true,
+    //                         strokeColor: '#0078FF',
+    //                         strokeOpacity: 1.0,
+    //                         strokeWeight: 2,
+    //                     });
+    //                     sosPath.setMap(map);
+    //                 }
+
+    //                 // Center the map to the new position
+    //                 map.setCenter(newPos);
+    //             }
+    //         });
+    //     } else {
+    //         console.log("User ID not provided in URL");
+    //     }
+    // }
+
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    function fetchAndDisplayUserData(userId) {
+        if (userId) {
+            db.collection("users").doc(userId).get().then(function(doc) {
+                if (doc.exists) {
+                    var userData = doc.data();
+
+                    // Update user image
+                    var userImage = document.getElementById('userImage');
+                    userImage.src = userData.iconImageUrl || 'default-avatar.png'; // Fallback to default if no image
+
+                    // Update user name
+                    var userName = document.getElementById('userName');
+                    userName.textContent = userData.name || "User's Name";
+
+                    // Update other user details
+                    var userDetailsList = document.querySelector('.sidebar ul');
+                    userDetailsList.innerHTML = `
+                        <li>Age: ${userData.age || 'Not available'}</li>
+                        <li>Gender: ${userData.gender || 'Not available'}</li>
+                        <li>Race: ${userData.race || 'Not available'}</li>
+                        <li>Height: ${userData.height || 'Not available'}</li>
+                        <li>Weight: ${userData.weight || 'Not available'}</li>
+                        <li>Home Address: ${userData.homeAddress || 'Not available'}</li>
+                    `;
+                } else {
+                    console.log("No user data available");
+                }
+            }).catch(function(error) {
+                console.log("Error getting user data:", error);
+            });
+        }
+    }
+
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_dNuh4Q4bd-ns_mdfWMX1_HeodQZFJzk&callback=initMap" async defer></script>
 </body>
 </html>
+
